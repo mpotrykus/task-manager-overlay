@@ -1,19 +1,12 @@
-using TaskManagerOverlay.Native;
-
 namespace TaskManagerOverlay;
 
 public static class AppConstants
 {
-    // Global keyboard hotkey: Ctrl+Alt+O
-    public const uint HotkeyModifiers = HotkeyInterop.MOD_CONTROL | HotkeyInterop.MOD_ALT;
-    public const uint HotkeyVirtualKey = 0x4F; // 'O'
-
     public const int GamepadPollIntervalMs = 16;
     public const int NavigationInitialRepeatDelayMs = 400;
     public const int NavigationRepeatIntervalMs = 120;
 
-    public const int RefreshIntervalVisibleMs = 1000;
-    public const int RefreshIntervalHiddenMs = 3000;
+    public const int RefreshIntervalMs = 1000;
 
     // GPU Engine instance names can appear/disappear as a process starts/stops using the GPU,
     // independent of the process (PID) set changing - so re-resolve periodically as a safety
@@ -39,5 +32,4 @@ public static class AppConstants
     };
 
     public const string SingleInstanceMutexName = "Global\\TaskManagerOverlay_SingleInstance_9F3E2C7B";
-    public const string AutostartRegistryValueName = "TaskManagerOverlay";
 }

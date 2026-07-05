@@ -4,5 +4,6 @@ public enum ProcessSortMode
 {
     Cpu,
     Ram,
-    Gpu
+    Gpu,
+    Impact
 }

@@ -7,6 +7,7 @@ public sealed class ProcessRowViewModel : ObservableObject
 {
     public int Pid { get; }
     public string ProcessName { get; }
+    public string? ExecutablePath { get; }
 
     private ImageSource? _icon;
     public ImageSource? Icon { get => _icon; set => SetProperty(ref _icon, value); }
@@ -33,6 +34,7 @@ public sealed class ProcessRowViewModel : ObservableObject
     {
         Pid = sample.Pid;
         ProcessName = sample.ProcessName;
+        ExecutablePath = sample.ExecutablePath;
         UpdateFrom(sample);
     }
 

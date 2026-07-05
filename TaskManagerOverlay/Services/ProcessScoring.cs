@@ -13,6 +13,8 @@ public static class ProcessScoring
         return AppConstants.MonitorExclusionDenylist.Contains(processName);
     }
 
+    /// <summary>Weighted blend of CPU/GPU/RAM share, scaled to 0-100 (weights sum to 1.0) so it reads
+    /// on the same scale as the percentages it's built from.</summary>
     public static double ComputeImpactScore(double cpuPercent, double? gpuPercent, double ramMb, double totalPhysicalRamMb)
     {
         double ramShare = totalPhysicalRamMb > 0 ? ramMb / totalPhysicalRamMb * 100.0 : 0;
@@ -23,6 +25,6 @@ public static class ProcessScoring
         if (gpuPercent is { } gpu)
             score += gpu / 100.0 * AppConstants.WeightGpu;
 
-        return score;
+        return score * 100.0;
     }
 }

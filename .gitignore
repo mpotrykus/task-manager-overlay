@@ -3,5 +3,5 @@
 ################################################################################
 
 /.vs
-/src/TaskManagerOverlay/bin/Debug/net8.0-windows
-/src/TaskManagerOverlay/obj
+/TaskManagerOverlay/bin/Debug/net8.0-windows
+/TaskManagerOverlay/obj

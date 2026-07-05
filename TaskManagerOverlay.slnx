@@ -1,5 +1,3 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/TaskManagerOverlay/TaskManagerOverlay.csproj" />
-  </Folder>
+  <Project Path="TaskManagerOverlay/TaskManagerOverlay.csproj" />
 </Solution>

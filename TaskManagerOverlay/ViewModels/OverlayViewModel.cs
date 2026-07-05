@@ -30,7 +30,11 @@ public sealed class OverlayViewModel : ObservableObject
         set
         {
             if (SetProperty(ref _selectedRow, value))
+            {
                 CommandManager.InvalidateRequerySuggested();
+                if (value?.Pid != _selectedProcessHistoryPid)
+                    ResetSelectedProcessHistory(value?.Pid);
+            }
         }
     }
 
@@ -79,6 +83,34 @@ public sealed class OverlayViewModel : ObservableObject
     private PointCollection? _gpuHistoryFillPoints;
     public PointCollection? GpuHistoryFillPoints { get => _gpuHistoryFillPoints; private set => SetProperty(ref _gpuHistoryFillPoints, value); }
 
+    // Rolling trend history behind the action modal's per-process sparklines. Only ever tracks
+    // the single currently-selected process (not all rows), so the cost is one extra sample push
+    // per tick regardless of how many hundred processes are in the list. Auto-scaled to the
+    // buffer's own min/max rather than a fixed 0-100 domain, since RAM is in MB and most
+    // processes sit at a tiny, otherwise-invisible sliver of CPU/GPU.
+    private int? _selectedProcessHistoryPid;
+    private readonly List<double> _selectedProcessCpuHistory = new(SparklineHistoryLength);
+    private readonly List<double> _selectedProcessRamHistory = new(SparklineHistoryLength);
+    private readonly List<double> _selectedProcessGpuHistory = new(SparklineHistoryLength);
+
+    private PointCollection _selectedProcessCpuHistoryPoints = new();
+    public PointCollection SelectedProcessCpuHistoryPoints { get => _selectedProcessCpuHistoryPoints; private set => SetProperty(ref _selectedProcessCpuHistoryPoints, value); }
+
+    private PointCollection _selectedProcessCpuHistoryFillPoints = new();
+    public PointCollection SelectedProcessCpuHistoryFillPoints { get => _selectedProcessCpuHistoryFillPoints; private set => SetProperty(ref _selectedProcessCpuHistoryFillPoints, value); }
+
+    private PointCollection _selectedProcessRamHistoryPoints = new();
+    public PointCollection SelectedProcessRamHistoryPoints { get => _selectedProcessRamHistoryPoints; private set => SetProperty(ref _selectedProcessRamHistoryPoints, value); }
+
+    private PointCollection _selectedProcessRamHistoryFillPoints = new();
+    public PointCollection SelectedProcessRamHistoryFillPoints { get => _selectedProcessRamHistoryFillPoints; private set => SetProperty(ref _selectedProcessRamHistoryFillPoints, value); }
+
+    private PointCollection? _selectedProcessGpuHistoryPoints;
+    public PointCollection? SelectedProcessGpuHistoryPoints { get => _selectedProcessGpuHistoryPoints; private set => SetProperty(ref _selectedProcessGpuHistoryPoints, value); }
+
+    private PointCollection? _selectedProcessGpuHistoryFillPoints;
+    public PointCollection? SelectedProcessGpuHistoryFillPoints { get => _selectedProcessGpuHistoryFillPoints; private set => SetProperty(ref _selectedProcessGpuHistoryFillPoints, value); }
+
     private string _searchText = string.Empty;
     public string SearchText
     {
@@ -104,6 +136,7 @@ public sealed class OverlayViewModel : ObservableObject
                 OnPropertyChanged(nameof(IsSortedByCpu));
                 OnPropertyChanged(nameof(IsSortedByRam));
                 OnPropertyChanged(nameof(IsSortedByGpu));
+                OnPropertyChanged(nameof(IsSortedByImpact));
             }
         }
     }
@@ -111,9 +144,22 @@ public sealed class OverlayViewModel : ObservableObject
     public bool IsSortedByCpu => SortMode == ProcessSortMode.Cpu;
     public bool IsSortedByRam => SortMode == ProcessSortMode.Ram;
     public bool IsSortedByGpu => SortMode == ProcessSortMode.Gpu;
+    public bool IsSortedByImpact => SortMode == ProcessSortMode.Impact;
 
-    public ICommand SuspendResumeCommand { get; }
-    public ICommand KillCommand { get; }
+    private bool _isActionModalOpen;
+    /// <summary>Whether the per-process action modal (stats + Suspend/Kill/Cancel) is showing.</summary>
+    public bool IsActionModalOpen { get => _isActionModalOpen; private set => SetProperty(ref _isActionModalOpen, value); }
+
+    private ProcessRowViewModel? _actionModalRow;
+    /// <summary>The process the action modal is showing/acting on - captured at open time so it stays
+    /// stable even if the underlying selection changes while the modal is up.</summary>
+    public ProcessRowViewModel? ActionModalRow { get => _actionModalRow; private set => SetProperty(ref _actionModalRow, value); }
+
+    public ICommand OpenActionModalCommand { get; }
+    public ICommand ConfirmSuspendResumeCommand { get; }
+    public ICommand ConfirmKillCommand { get; }
+    public ICommand CancelActionModalCommand { get; }
+    public ICommand SetSortModeCommand { get; }
 
     public OverlayViewModel(ProcessControlService processControl)
     {
@@ -127,6 +173,7 @@ public sealed class OverlayViewModel : ObservableObject
         _activeView.LiveSortingProperties.Add(nameof(ProcessRowViewModel.CpuPercent));
         _activeView.LiveSortingProperties.Add(nameof(ProcessRowViewModel.RamMb));
         _activeView.LiveSortingProperties.Add(nameof(ProcessRowViewModel.GpuPercent));
+        _activeView.LiveSortingProperties.Add(nameof(ProcessRowViewModel.ImpactScore));
         _activeView.IsLiveFiltering = true;
         _activeView.LiveFilteringProperties.Add(nameof(ProcessRowViewModel.IsSuspended));
         ApplySortMode();
@@ -136,8 +183,11 @@ public sealed class OverlayViewModel : ObservableObject
         _suspendedView.IsLiveFiltering = true;
         _suspendedView.LiveFilteringProperties.Add(nameof(ProcessRowViewModel.IsSuspended));
 
-        SuspendResumeCommand = new RelayCommand(ExecuteSuspendResume, CanActOnSelection);
-        KillCommand = new RelayCommand(ExecuteKill, CanActOnSelection);
+        OpenActionModalCommand = new RelayCommand(OpenActionModal, () => SelectedRow is not null);
+        ConfirmSuspendResumeCommand = new RelayCommand(ExecuteSuspendResume, () => ActionModalRow is { IsProtected: false });
+        ConfirmKillCommand = new RelayCommand(ExecuteKill, () => ActionModalRow is { IsProtected: false });
+        CancelActionModalCommand = new RelayCommand(CloseActionModal);
+        SetSortModeCommand = new RelayCommand<ProcessSortMode>(mode => SetSortMode(mode));
     }
 
     private bool FilterActive(object obj) => obj is ProcessRowViewModel { IsSuspended: false } row && MatchesSearch(row);
@@ -147,11 +197,25 @@ public sealed class OverlayViewModel : ObservableObject
     private bool MatchesSearch(ProcessRowViewModel row)
         => string.IsNullOrWhiteSpace(_searchText) || row.ProcessName.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
 
-    private bool CanActOnSelection() => SelectedRow is { IsProtected: false };
+    private void OpenActionModal()
+    {
+        if (SelectedRow is null)
+            return;
+
+        ActionModalRow = SelectedRow;
+        IsActionModalOpen = true;
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void CloseActionModal()
+    {
+        IsActionModalOpen = false;
+        ActionModalRow = null;
+    }
 
     private void ExecuteSuspendResume()
     {
-        var row = SelectedRow;
+        var row = ActionModalRow;
         if (row is null || row.IsProtected)
             return;
 
@@ -161,16 +225,20 @@ public sealed class OverlayViewModel : ObservableObject
 
         if (success)
             row.IsSuspended = !row.IsSuspended;
+
+        CloseActionModal();
     }
 
     private void ExecuteKill()
     {
-        var row = SelectedRow;
+        var row = ActionModalRow;
         if (row is null || row.IsProtected)
             return;
 
         if (_processControl.TryKill(row.Pid, row.ProcessName))
             Rows.Remove(row);
+
+        CloseActionModal();
     }
 
     /// <summary>The active list followed by the suspended list, so Up/Down navigation flows continuously across both sections.</summary>
@@ -221,19 +289,103 @@ public sealed class OverlayViewModel : ObservableObject
         return fill;
     }
 
-    private static readonly ProcessSortMode[] SortModeCycle = { ProcessSortMode.Cpu, ProcessSortMode.Ram, ProcessSortMode.Gpu };
+    private static void PushRawHistory(List<double> history, double value)
+    {
+        history.Add(value);
+        if (history.Count > SparklineHistoryLength)
+            history.RemoveAt(0);
+    }
 
-    /// <summary>Cycles the active list's sort mode forward (+1) or backward (-1) through CPU/RAM/GPU, preserving the selected row.</summary>
+    /// <summary>Same shape as BuildSparklinePoints, but scales to the buffer's own min/max instead of a
+    /// fixed 0-100 domain - needed since RAM is in MB, and most processes sit at a sliver of CPU/GPU
+    /// that a 0-100 scale would flatten to an invisible line.</summary>
+    private static PointCollection BuildAutoScaledSparklinePoints(IReadOnlyList<double> history)
+    {
+        var points = new PointCollection();
+        int count = history.Count;
+        if (count == 0)
+            return points;
+
+        double min = history.Min();
+        double range = history.Max() - min;
+
+        double stepX = count > 1 ? SparklineWidth / (count - 1) : 0;
+        for (int i = 0; i < count; i++)
+        {
+            double x = count > 1 ? i * stepX : 0;
+            double normalized = range > 0.0001 ? (history[i] - min) / range : 0.5;
+            double y = SparklineHeight - normalized * SparklineHeight;
+            points.Add(new Point(x, y));
+        }
+
+        if (count == 1)
+            points.Add(new Point(SparklineWidth, points[0].Y));
+
+        return points;
+    }
+
+    /// <summary>Called whenever the selection changes to a different process (or to none), so the
+    /// modal's sparklines never show a discontinuous jump from one process's data to another's.</summary>
+    private void ResetSelectedProcessHistory(int? pid)
+    {
+        _selectedProcessHistoryPid = pid;
+        _selectedProcessCpuHistory.Clear();
+        _selectedProcessRamHistory.Clear();
+        _selectedProcessGpuHistory.Clear();
+        SelectedProcessCpuHistoryPoints = new PointCollection();
+        SelectedProcessCpuHistoryFillPoints = new PointCollection();
+        SelectedProcessRamHistoryPoints = new PointCollection();
+        SelectedProcessRamHistoryFillPoints = new PointCollection();
+        SelectedProcessGpuHistoryPoints = null;
+        SelectedProcessGpuHistoryFillPoints = null;
+    }
+
+    /// <summary>Pushes this tick's sample for whichever process is currently selected into its rolling
+    /// history. Must run after Rows have been updated from the latest snapshot.</summary>
+    private void UpdateSelectedProcessHistory()
+    {
+        var row = SelectedRow;
+        if (row is null)
+            return;
+
+        PushRawHistory(_selectedProcessCpuHistory, row.CpuPercent);
+        SelectedProcessCpuHistoryPoints = BuildAutoScaledSparklinePoints(_selectedProcessCpuHistory);
+        SelectedProcessCpuHistoryFillPoints = BuildFillPoints(SelectedProcessCpuHistoryPoints);
+
+        PushRawHistory(_selectedProcessRamHistory, row.RamMb);
+        SelectedProcessRamHistoryPoints = BuildAutoScaledSparklinePoints(_selectedProcessRamHistory);
+        SelectedProcessRamHistoryFillPoints = BuildFillPoints(SelectedProcessRamHistoryPoints);
+
+        if (row.GpuPercent is { } gpu)
+        {
+            PushRawHistory(_selectedProcessGpuHistory, gpu);
+            SelectedProcessGpuHistoryPoints = BuildAutoScaledSparklinePoints(_selectedProcessGpuHistory);
+            SelectedProcessGpuHistoryFillPoints = BuildFillPoints(SelectedProcessGpuHistoryPoints);
+        }
+        else
+        {
+            _selectedProcessGpuHistory.Clear();
+            SelectedProcessGpuHistoryPoints = null;
+            SelectedProcessGpuHistoryFillPoints = null;
+        }
+    }
+
+    private static readonly ProcessSortMode[] SortModeCycle = { ProcessSortMode.Cpu, ProcessSortMode.Ram, ProcessSortMode.Gpu, ProcessSortMode.Impact };
+
+    /// <summary>Cycles the active list's sort mode forward (+1) or backward (-1) through CPU/RAM/GPU/Impact, preserving the selected row.</summary>
     public void CycleSortMode(int direction)
     {
         int currentIndex = Array.IndexOf(SortModeCycle, SortMode);
         int nextIndex = ((currentIndex + direction) % SortModeCycle.Length + SortModeCycle.Length) % SortModeCycle.Length;
-        SortMode = SortModeCycle[nextIndex];
+        SetSortMode(SortModeCycle[nextIndex]);
+    }
 
-        int? selectedPid = SelectedRow?.Pid;
+    /// <summary>Switches the active list's sort mode directly (e.g. from clicking a column header), jumping selection back to the new top row.</summary>
+    public void SetSortMode(ProcessSortMode mode)
+    {
+        SortMode = mode;
         ApplySortMode();
-        if (selectedPid is { } pid)
-            SelectedRow = Rows.FirstOrDefault(r => r.Pid == pid);
+        SelectedRow = GetCombinedOrder().FirstOrDefault();
     }
 
     private void ApplySortMode()
@@ -243,6 +395,7 @@ public sealed class OverlayViewModel : ObservableObject
             ProcessSortMode.Cpu => nameof(ProcessRowViewModel.CpuPercent),
             ProcessSortMode.Ram => nameof(ProcessRowViewModel.RamMb),
             ProcessSortMode.Gpu => nameof(ProcessRowViewModel.GpuPercent),
+            ProcessSortMode.Impact => nameof(ProcessRowViewModel.ImpactScore),
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -316,25 +469,25 @@ public sealed class OverlayViewModel : ObservableObject
                 Rows.Add(new ProcessRowViewModel(sample));
         }
 
-        if (selectedPid is { } pid)
+        var stillSelected = selectedPid is { } pid ? Rows.FirstOrDefault(r => r.Pid == pid) : null;
+        if (stillSelected is not null)
         {
-            var stillSelected = Rows.FirstOrDefault(r => r.Pid == pid);
-            if (stillSelected is not null)
-            {
-                SelectedRow = stillSelected;
-                return;
-            }
-        }
-
-        var reordered = GetCombinedOrder();
-        if (reordered.Count == 0)
-        {
-            SelectedRow = null;
+            SelectedRow = stillSelected;
         }
         else
         {
-            int fallbackIndex = Math.Clamp(previousVisualIndex, 0, reordered.Count - 1);
-            SelectedRow = reordered[fallbackIndex];
+            var reordered = GetCombinedOrder();
+            if (reordered.Count == 0)
+            {
+                SelectedRow = null;
+            }
+            else
+            {
+                int fallbackIndex = Math.Clamp(previousVisualIndex, 0, reordered.Count - 1);
+                SelectedRow = reordered[fallbackIndex];
+            }
         }
+
+        UpdateSelectedProcessHistory();
     }
 }

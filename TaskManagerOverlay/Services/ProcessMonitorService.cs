@@ -25,7 +25,6 @@ public sealed class ProcessMonitorService : IDisposable
 
     private Dictionary<int, CpuState> _prevCpuStates = new();
     private volatile bool _running = true;
-    private volatile int _intervalMs = AppConstants.RefreshIntervalVisibleMs;
 
     public event Action<IReadOnlyList<ProcessSample>, SystemStatsSample>? Refreshed;
 
@@ -56,11 +55,6 @@ public sealed class ProcessMonitorService : IDisposable
         }
     }
 
-    public void SetVisible(bool visible)
-    {
-        _intervalMs = visible ? AppConstants.RefreshIntervalVisibleMs : AppConstants.RefreshIntervalHiddenMs;
-    }
-
     private void PollLoop()
     {
         while (_running)
@@ -74,7 +68,7 @@ public sealed class ProcessMonitorService : IDisposable
                 // A single bad tick (e.g. transient enumeration failure) shouldn't kill the monitor loop.
             }
 
-            Thread.Sleep(_intervalMs);
+            Thread.Sleep(AppConstants.RefreshIntervalMs);
         }
     }
 
@@ -213,7 +207,7 @@ public sealed class ProcessMonitorService : IDisposable
     public void Dispose()
     {
         _running = false;
-        _pollThread.Join(_intervalMs * 2);
+        _pollThread.Join(AppConstants.RefreshIntervalMs * 2);
         _gpuUsageProvider.Dispose();
         _cpuTotalCounter?.Dispose();
         _availableRamCounter?.Dispose();
