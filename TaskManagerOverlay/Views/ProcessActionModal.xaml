@@ -21,26 +21,33 @@
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 KeyboardNavigation.DirectionalNavigation="Cycle">
             <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,22">
-                    <Border Width="36" Height="36" CornerRadius="9" Background="#20FFFFFF" VerticalAlignment="Center">
-                        <Image Source="{Binding ActionModalRow.Icon}" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel VerticalAlignment="Center" Margin="14,0,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding ActionModalRow.ProcessName}" Foreground="White" FontSize="17" FontWeight="Bold"
-                                       TextTrimming="CharacterEllipsis" MaxWidth="220"/>
-                            <TextBlock Text="{Binding ActionModalRow.Pid, StringFormat=PID {0}}" Foreground="#777777" FontSize="11"
-                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
-                            <Border Background="#1F4E8CFF" CornerRadius="8" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding ActionModalRow.ImpactScore, StringFormat=Impact {0:0.0}%}"
-                                           Foreground="{StaticResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
-                            </Border>
+                <Grid Margin="0,0,0,22">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Border Width="36" Height="36" CornerRadius="9" Background="#20FFFFFF" VerticalAlignment="Center">
+                            <Image Source="{Binding ActionModalRow.Icon}" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Margin="14,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding ActionModalRow.ProcessName}" Foreground="White" FontSize="17" FontWeight="Bold"
+                                           TextTrimming="CharacterEllipsis" MaxWidth="220"/>
+                                <TextBlock Text="{Binding ActionModalRow.Pid, StringFormat=PID {0}}" Foreground="#777777" FontSize="11"
+                                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding ActionModalRow.ExecutablePath}" Foreground="#777777" FontSize="10"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="380" Margin="0,2,0,0"
+                                       ToolTip="{Binding ActionModalRow.ExecutablePath}"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding ActionModalRow.ExecutablePath}" Foreground="#777777" FontSize="10"
-                                   TextTrimming="CharacterEllipsis" MaxWidth="380" Margin="0,2,0,0"
-                                   ToolTip="{Binding ActionModalRow.ExecutablePath}"/>
                     </StackPanel>
-                </StackPanel>
+                    <Border Grid.Column="1" Background="#1F4E8CFF" CornerRadius="8" Padding="6,2" Margin="8,0,0,0"
+                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ActionModalRow.ImpactScore, StringFormat=Impact {0:0.0}%}"
+                                   Foreground="{StaticResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
+                    </Border>
+                </Grid>
 
                 <Grid Margin="0,24,0,48">
                     <Grid.ColumnDefinitions>
@@ -62,7 +69,7 @@
                                      Label="RAM"
                                      ValueText="{Binding ActionModalRow.RamMb, StringFormat={}{0:0} MB}"
                                      ValueBrush="#CFCFCF"
-                                     StrokeBrush="{StaticResource AccentBrush}"
+                                     StrokeBrush="{StaticResource AccentBrushLight}"
                                      FillBrush="#224E8CFF"
                                      HistoryPoints="{Binding SelectedProcessRamHistoryPoints}"
                                      HistoryFillPoints="{Binding SelectedProcessRamHistoryFillPoints}"/>
@@ -78,25 +85,28 @@
                 </Grid>
 
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" x:Name="SuspendModalButton" Content="{Binding ActionModalRow.IsSuspended, Converter={StaticResource SuspendLabel}}"
+                    <Button Grid.Row="0" Grid.Column="0" x:Name="SuspendModalButton" Content="{Binding ActionModalRow.IsSuspended, Converter={StaticResource SuspendLabel}}"
                             Command="{Binding ConfirmSuspendResumeCommand}"
                             IsEnabled="{Binding ActionModalRow.IsProtected, Converter={StaticResource InverseBool}}"
                             Style="{StaticResource ActionButtonStyle}" Background="{StaticResource AccentGradient}"
-                            Padding="0,12" Margin="0,0,8,0"/>
-                    <Button Grid.Column="1" x:Name="KillModalButton" Content="Kill"
+                            Padding="0,12" Margin="0,0,4,0"/>
+                    <Button Grid.Row="0" Grid.Column="1" x:Name="KillModalButton" Content="Kill"
                             Command="{Binding ConfirmKillCommand}"
                             IsEnabled="{Binding ActionModalRow.IsProtected, Converter={StaticResource InverseBool}}"
                             Style="{StaticResource ActionButtonStyle}" Background="{StaticResource DangerGradient}"
-                            Padding="0,12" Margin="8,0"/>
-                    <Button Grid.Column="2" x:Name="CancelModalButton" Content="Cancel"
+                            Padding="0,12" Margin="4,0,0,0"/>
+                    <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="CancelModalButton" Content="Cancel"
                             Command="{Binding CancelActionModalCommand}"
                             Style="{StaticResource ActionButtonStyle}" Background="#3A3A3A"
-                            Padding="0,12" Margin="8,0,0,0"/>
+                            Padding="0,12" Margin="0,10,0,0"/>
                 </Grid>
             </StackPanel>
         </Border>

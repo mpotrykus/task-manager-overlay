@@ -145,6 +145,7 @@ public sealed class OverlayViewModel : ObservableObject
         {
             if (SetProperty(ref _sortMode, value))
             {
+                OnPropertyChanged(nameof(IsSortedByProcess));
                 OnPropertyChanged(nameof(IsSortedByCpu));
                 OnPropertyChanged(nameof(IsSortedByRam));
                 OnPropertyChanged(nameof(IsSortedByGpu));
@@ -153,6 +154,7 @@ public sealed class OverlayViewModel : ObservableObject
         }
     }
 
+    public bool IsSortedByProcess => SortMode == ProcessSortMode.Process;
     public bool IsSortedByCpu => SortMode == ProcessSortMode.Cpu;
     public bool IsSortedByRam => SortMode == ProcessSortMode.Ram;
     public bool IsSortedByGpu => SortMode == ProcessSortMode.Gpu;
@@ -382,9 +384,9 @@ public sealed class OverlayViewModel : ObservableObject
         }
     }
 
-    private static readonly ProcessSortMode[] SortModeCycle = { ProcessSortMode.Cpu, ProcessSortMode.Ram, ProcessSortMode.Gpu, ProcessSortMode.Impact };
+    private static readonly ProcessSortMode[] SortModeCycle = { ProcessSortMode.Process, ProcessSortMode.Cpu, ProcessSortMode.Ram, ProcessSortMode.Gpu, ProcessSortMode.Impact };
 
-    /// <summary>Cycles the active list's sort mode forward (+1) or backward (-1) through CPU/RAM/GPU/Impact, preserving the selected row.</summary>
+    /// <summary>Cycles the active list's sort mode forward (+1) or backward (-1) through Process/CPU/RAM/GPU/Impact, preserving the selected row.</summary>
     public void CycleSortMode(int direction)
     {
         int currentIndex = Array.IndexOf(SortModeCycle, SortMode);
@@ -415,15 +417,17 @@ public sealed class OverlayViewModel : ObservableObject
     {
         string property = SortMode switch
         {
+            ProcessSortMode.Process => nameof(ProcessRowViewModel.ProcessName),
             ProcessSortMode.Cpu => nameof(ProcessRowViewModel.CpuPercent),
             ProcessSortMode.Ram => nameof(ProcessRowViewModel.RamMb),
             ProcessSortMode.Gpu => nameof(ProcessRowViewModel.GpuPercent),
             ProcessSortMode.Impact => nameof(ProcessRowViewModel.ImpactScore),
             _ => throw new ArgumentOutOfRangeException()
         };
+        var direction = SortMode == ProcessSortMode.Process ? ListSortDirection.Ascending : ListSortDirection.Descending;
 
         _activeView.SortDescriptions.Clear();
-        _activeView.SortDescriptions.Add(new SortDescription(property, ListSortDirection.Descending));
+        _activeView.SortDescriptions.Add(new SortDescription(property, direction));
     }
 
     /// <summary>Moves the selection by one item within the combined active+suspended order. Must be called on the UI thread.</summary>

@@ -25,100 +25,100 @@
          content (see SizeAndCenterOnPrimaryScreen), not the whole screen. The fullscreen dimming
          backdrop and click-off-to-close catcher live in the separate ScrimWindow underneath it. -->
     <Grid>
-    <Viewbox x:Name="PanelViewbox" Stretch="Uniform">
-    <Border Width="1020" Height="810" BorderBrush="#55FFFFFF" BorderThickness="0" CornerRadius="16" Padding="36,48"
+        <Viewbox x:Name="PanelViewbox" Stretch="Uniform">
+            <Border Width="1020" Height="810" BorderBrush="#55FFFFFF" BorderThickness="0" CornerRadius="16" Padding="36,48"
             Background="#66000000"
             Effect="{StaticResource PanelShadow}">
 
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-            <!-- HEADER -->
+                    <!-- HEADER -->
 
-            <Grid Grid.Row="0" Margin="12,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Border Width="36" Height="36" CornerRadius="9" Background="{StaticResource AccentGradient}" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="White"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <TextBlock Text="Task Manager Overlay" FontSize="20" FontWeight="Bold" Foreground="White"
-                               VerticalAlignment="Center" Margin="14,0,0,0"/>
-                </StackPanel>
-                <Border Grid.Column="1" Width="260" Height="36" CornerRadius="18" Background="#08FFFFFF" BorderThickness="1" VerticalAlignment="Center">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Style.Triggers>
-                                <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <Grid>
+                    <Grid Grid.Row="0" Margin="12,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#8C8C8C"
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Border Width="36" Height="36" CornerRadius="9" Background="{StaticResource AccentGradient}" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Task Manager Overlay" FontSize="20" FontWeight="Bold" Foreground="White"
+                               VerticalAlignment="Center" Margin="14,0,0,0"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Width="260" Height="36" CornerRadius="18" Background="{StaticResource ContainerBackgroundBrush}" BorderThickness="1" VerticalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrushLight}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#8C8C8C"
                                    Margin="12,0,4,0" VerticalAlignment="Center"/>
-                        <Grid Grid.Column="1" VerticalAlignment="Center">
-                            <TextBox x:Name="SearchBox"
+                                <Grid Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBox x:Name="SearchBox"
                                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                      Padding="0,4,12,4" Background="Transparent" Foreground="White"
                                      BorderThickness="0" CaretBrush="White" FocusVisualStyle="{x:Null}"/>
-                            <TextBlock Text="Filter processes..." Foreground="#777777"
+                                    <TextBlock Text="Filter processes..." Foreground="#777777"
                                        VerticalAlignment="Center" IsHitTestVisible="False">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                        <Button x:Name="ClearSearchButton" Grid.Column="2"
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                                <Button x:Name="ClearSearchButton" Grid.Column="2"
                                 Margin="4,0,10,0" Click="ClearSearchButton_Click" ToolTip="Clear search">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource SortHeaderButtonStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#8C8C8C"/>
-                        </Button>
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource SortHeaderButtonStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#8C8C8C"/>
+                                </Button>
+                            </Grid>
+                        </Border>
                     </Grid>
-                </Border>
-            </Grid>
 
-            <!-- OVERALL STATS -->
+                    <!-- OVERALL STATS -->
 
-            <Grid Grid.Row="1" Margin="12,50">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="1" Margin="12,50">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                <views:StatCard Grid.Column="0" Margin="0,0,8,0"
+                        <views:StatCard Grid.Column="0" Margin="0,0,8,0"
                                  Label="CPU"
                                  ValueText="{Binding CpuPercent, StringFormat={}{0:0}%}"
                                  ValueBrush="{Binding CpuPercent, Converter={StaticResource HeatBrush}}"
@@ -127,7 +127,7 @@
                                  HistoryPoints="{Binding CpuHistoryPoints}"
                                  HistoryFillPoints="{Binding CpuHistoryFillPoints}"/>
 
-                <views:StatCard Grid.Column="1" Margin="8,0,8,0"
+                        <views:StatCard Grid.Column="1" Margin="8,0,8,0"
                                  Label="MEMORY"
                                  ValueText="{Binding RamSummaryText}"
                                  ValueBrush="{Binding RamUsedPercent, Converter={StaticResource HeatBrush}}"
@@ -136,7 +136,7 @@
                                  HistoryPoints="{Binding RamHistoryPoints}"
                                  HistoryFillPoints="{Binding RamHistoryFillPoints}"/>
 
-                <views:StatCard Grid.Column="2" Margin="8,0,8,0"
+                        <views:StatCard Grid.Column="2" Margin="8,0,8,0"
                                  Label="GPU"
                                  ValueText="{Binding GpuPercent, Converter={StaticResource GpuPercentText}}"
                                  ValueBrush="{Binding GpuPercent, Converter={StaticResource HeatBrush}}"
@@ -145,99 +145,114 @@
                                  HistoryPoints="{Binding GpuHistoryPoints}"
                                  HistoryFillPoints="{Binding GpuHistoryFillPoints}"/>
 
-                <Border Grid.Column="3" Background="#08FFFFFF" CornerRadius="10" Padding="18,15" Margin="8,0,0,0">
-                    <StackPanel>
-                        <TextBlock Text="PROCESSES" Foreground="#888888" FontSize="10" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding ProcessCount}" FontFamily="Consolas" FontSize="20"
+                        <Border Grid.Column="3" Background="{StaticResource ContainerBackgroundBrush}" CornerRadius="10" Padding="18,15" Margin="8,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="PROCESSES" Foreground="#888888" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding ProcessCount}" FontFamily="Consolas" FontSize="20"
                                    FontWeight="Bold" Foreground="White" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-            
-            <!-- TABLE HEADERS -->
-            
-            <Border Grid.Row="2" BorderBrush="#26FFFFFF" BorderThickness="0,0,0,1" Margin="24,0,26,10" Padding="0,0,0,10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="34"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="70"/>
-                        <ColumnDefinition Width="90"/>
-                        <ColumnDefinition Width="70"/>
-                        <ColumnDefinition Width="70"/>
-                        <ColumnDefinition Width="90"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="1" Text="PROCESS" Foreground="#787878" FontSize="10" FontWeight="Bold" Margin="14,0"/>
-                    <Button Grid.Column="2" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- TABLE HEADERS -->
+
+                    <Border Grid.Row="2" BorderBrush="#26FFFFFF" BorderThickness="0,0,0,1" Margin="24,0,26,10" Padding="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="90"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="1" Style="{StaticResource SortHeaderButtonStyle}" HorizontalContentAlignment="Left" Margin="14,0"
+                            Command="{Binding SetSortModeCommand}" CommandParameter="{x:Static models:ProcessSortMode.Process}"
+                            ToolTip="Sort by process name">
+                                <TextBlock Text="PROCESS" FontSize="10" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#787878"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSortedByProcess}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                            <Button Grid.Column="2" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
                             Command="{Binding SetSortModeCommand}" CommandParameter="{x:Static models:ProcessSortMode.Cpu}"
                             ToolTip="Sort by CPU">
-                        <TextBlock Text="CPU" FontSize="10" FontWeight="Bold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#787878"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSortedByCpu}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Button>
-                    <Button Grid.Column="3" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
+                                <TextBlock Text="CPU" FontSize="10" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#787878"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSortedByCpu}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                            <Button Grid.Column="3" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
                             Command="{Binding SetSortModeCommand}" CommandParameter="{x:Static models:ProcessSortMode.Ram}"
                             ToolTip="Sort by RAM">
-                        <TextBlock Text="RAM" FontSize="10" FontWeight="Bold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#787878"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSortedByRam}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Button>
-                    <Button Grid.Column="4" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
+                                <TextBlock Text="RAM" FontSize="10" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#787878"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSortedByRam}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                            <Button Grid.Column="4" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
                             Command="{Binding SetSortModeCommand}" CommandParameter="{x:Static models:ProcessSortMode.Gpu}"
                             ToolTip="Sort by GPU">
-                        <TextBlock Text="GPU" FontSize="10" FontWeight="Bold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#787878"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSortedByGpu}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Button>
-                    <Button Grid.Column="5" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
+                                <TextBlock Text="GPU" FontSize="10" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#787878"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSortedByGpu}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                            <Button Grid.Column="5" Style="{StaticResource SortHeaderButtonStyle}" Margin="0,0,14,0"
                             Command="{Binding SetSortModeCommand}" CommandParameter="{x:Static models:ProcessSortMode.Impact}"
                             ToolTip="Sort by Impact">
-                        <TextBlock Text="IMPACT" FontSize="10" FontWeight="Bold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#787878"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsSortedByImpact}" Value="True">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Button>
-                </Grid>
-            </Border>
+                                <TextBlock Text="IMPACT" FontSize="10" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#787878"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSortedByImpact}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                        </Grid>
+                    </Border>
 
-            <!-- PROCESS ROWS -->
+                    <!-- PROCESS ROWS -->
 
-            <ListBox Grid.Row="3" x:Name="ProcessListBox"
+                    <ListBox Grid.Row="3" x:Name="ProcessListBox"
                      ItemsSource="{Binding ActiveRowsView}"
                      SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                      Background="Transparent" BorderThickness="0"
@@ -249,82 +264,82 @@
                      MouseDoubleClick="OnProcessRowDoubleClick"
                      SelectionChanged="OnProcessListSelectionChanged"/>
 
-            <!-- LOADING STATE - shown until the first process snapshot arrives -->
+                    <!-- LOADING STATE - shown until the first process snapshot arrives -->
 
-            <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
-                <Ellipse x:Name="LoadingSpinner" Width="34" Height="34" StrokeThickness="3"
+                        <Ellipse x:Name="LoadingSpinner" Width="34" Height="34" StrokeThickness="3"
                          Stroke="{StaticResource AccentGradient}" StrokeDashArray="2 1.4" StrokeDashCap="Round"
                          RenderTransformOrigin="0.5,0.5">
-                    <Ellipse.RenderTransform>
-                        <RotateTransform/>
-                    </Ellipse.RenderTransform>
-                    <Ellipse.Triggers>
-                        <EventTrigger RoutedEvent="Loaded">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
+                            <Ellipse.RenderTransform>
+                                <RotateTransform/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
                                                      From="0" To="360" Duration="0:0:0.9" RepeatBehavior="Forever"/>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </Ellipse.Triggers>
-                </Ellipse>
-                <TextBlock Text="Loading processes..." Foreground="#888888" FontSize="12"
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                        <TextBlock Text="Loading processes..." Foreground="#888888" FontSize="12"
                            Margin="0,14,0,0" HorizontalAlignment="Center"/>
-            </StackPanel>
+                    </StackPanel>
 
-            <!-- SORTING OVERLAY - shown while a sort-mode change is being applied, over the (stale) rows -->
+                    <!-- SORTING OVERLAY - shown while a sort-mode change is being applied, over the (stale) rows -->
 
-            <Border Grid.Row="3" Background="#B3141414"
+                    <Border Grid.Row="3" Background="#B3141414"
                     Visibility="{Binding IsSorting, Converter={StaticResource BoolToVis}}">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Ellipse Width="34" Height="34" StrokeThickness="3"
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Ellipse Width="34" Height="34" StrokeThickness="3"
                              Stroke="{StaticResource AccentGradient}" StrokeDashArray="2 1.4" StrokeDashCap="Round"
                              RenderTransformOrigin="0.5,0.5">
-                        <Ellipse.RenderTransform>
-                            <RotateTransform/>
-                        </Ellipse.RenderTransform>
-                        <Ellipse.Triggers>
-                            <EventTrigger RoutedEvent="Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
+                                <Ellipse.RenderTransform>
+                                    <RotateTransform/>
+                                </Ellipse.RenderTransform>
+                                <Ellipse.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
                                                          From="0" To="360" Duration="0:0:0.9" RepeatBehavior="Forever"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </Ellipse.Triggers>
-                    </Ellipse>
-                    <TextBlock Text="Sorting..." Foreground="#CCCCCC" FontSize="12"
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Ellipse.Triggers>
+                            </Ellipse>
+                            <TextBlock Text="Sorting..." Foreground="#CCCCCC" FontSize="12"
                                Margin="0,14,0,0" HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+                        </StackPanel>
+                    </Border>
 
-            <!-- SUSPENDED ROWS -->
-            
-            <Grid Grid.Row="4" Margin="0,24,0,0"
+                    <!-- SUSPENDED ROWS -->
+
+                    <Grid Grid.Row="4" Margin="0,24,0,0"
                   Visibility="{Binding SuspendedRowsView.Count, Converter={StaticResource CountToVis}}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="6,0,0,10">
-                    <Border Background="#26E0A500" CornerRadius="10" Padding="8,3">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE769;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#E0A500" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <TextBlock Foreground="#E0A500" FontSize="11" FontWeight="Bold" VerticalAlignment="Center">
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="6,0,0,10">
+                            <Border Background="#26E0A500" CornerRadius="10" Padding="8,3">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE769;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#E0A500" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBlock Foreground="#E0A500" FontSize="11" FontWeight="Bold" VerticalAlignment="Center">
                                 <Run Text="SUSPENDED"/>
                                 <Run Text=" ("/>
                                 <Run Text="{Binding SuspendedRowsView.Count, Mode=OneWay}"/>
                                 <Run Text=")"/>
-                            </TextBlock>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
 
-                <ListBox Grid.Row="1" x:Name="SuspendedListBox"
+                        <ListBox Grid.Row="1" x:Name="SuspendedListBox"
                          ItemsSource="{Binding SuspendedRowsView}"
                          SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                          Background="Transparent" BorderThickness="0"
@@ -336,12 +351,12 @@
                          ScrollViewer.CanContentScroll="False"
                          MouseDoubleClick="OnProcessRowDoubleClick"
                          SelectionChanged="OnProcessListSelectionChanged"/>
-            </Grid>
+                    </Grid>
 
-        </Grid>
-    </Border>
-    </Viewbox>
+                </Grid>
+            </Border>
+        </Viewbox>
 
-    <views:ProcessActionModal/>
+        <views:ProcessActionModal/>
     </Grid>
 </Window>
