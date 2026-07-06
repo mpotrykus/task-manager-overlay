@@ -56,8 +56,10 @@ public partial class OverlayWindow : Window
 
         if (ViewModel.IsActionModalOpen)
         {
-            // Mirrors the gamepad's D-pad left/right behavior while the action modal is open:
-            // move focus between the modal's buttons instead of touching the process selection.
+            // Mirrors the gamepad's D-pad behavior while the action modal is open: move focus
+            // between the modal's buttons instead of touching the process selection.
+            ActionModal.EnsureFocusWithinModal();
+
             if (e.Key == Key.Left && Keyboard.FocusedElement is UIElement focusedForLeft)
             {
                 focusedForLeft.MoveFocus(new TraversalRequest(FocusNavigationDirection.Left));
@@ -66,6 +68,16 @@ public partial class OverlayWindow : Window
             else if (e.Key == Key.Right && Keyboard.FocusedElement is UIElement focusedForRight)
             {
                 focusedForRight.MoveFocus(new TraversalRequest(FocusNavigationDirection.Right));
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Up && Keyboard.FocusedElement is UIElement focusedForUp)
+            {
+                focusedForUp.MoveFocus(new TraversalRequest(FocusNavigationDirection.Up));
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Down && Keyboard.FocusedElement is UIElement focusedForDown)
+            {
+                focusedForDown.MoveFocus(new TraversalRequest(FocusNavigationDirection.Down));
                 e.Handled = true;
             }
             return;

@@ -357,6 +357,6 @@
             </Border>
         </Viewbox>
 
-        <views:ProcessActionModal/>
+        <views:ProcessActionModal x:Name="ActionModal"/>
     </Grid>
 </Window>

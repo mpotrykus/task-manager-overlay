@@ -29,4 +29,15 @@ public partial class ProcessActionModal : UserControl
         if ((bool)e.NewValue)
             Dispatcher.BeginInvoke(() => CancelModalButton.Focus());
     }
+
+    /// <summary>Reasserts focus onto the Cancel button if keyboard focus somehow isn't inside the
+    /// modal (e.g. the initial post-open focus lost a timing race against other queued dispatcher
+    /// work). Called before routing D-pad/arrow input to the modal's buttons, since directional
+    /// navigation from <see cref="Keyboard.FocusedElement"/> is a no-op when that element sits
+    /// outside this control's visual tree.</summary>
+    public void EnsureFocusWithinModal()
+    {
+        if (!IsKeyboardFocusWithin)
+            CancelModalButton.Focus();
+    }
 }

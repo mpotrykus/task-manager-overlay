@@ -80,10 +80,18 @@ public sealed class GamepadNavigationCoordinator
             return;
         }
 
+        // Keyboard focus can end up outside the modal (e.g. the post-open focus call raced against
+        // other dispatcher work), which would otherwise make every D-pad press below silently no-op.
+        _window.ActionModal.EnsureFocusWithinModal();
+
         if (buttons.HasFlag(XInputButtons.DPadLeft) && Keyboard.FocusedElement is UIElement focusedForLeft)
             focusedForLeft.MoveFocus(new TraversalRequest(FocusNavigationDirection.Left));
         if (buttons.HasFlag(XInputButtons.DPadRight) && Keyboard.FocusedElement is UIElement focusedForRight)
             focusedForRight.MoveFocus(new TraversalRequest(FocusNavigationDirection.Right));
+        if (buttons.HasFlag(XInputButtons.DPadUp) && Keyboard.FocusedElement is UIElement focusedForUp)
+            focusedForUp.MoveFocus(new TraversalRequest(FocusNavigationDirection.Up));
+        if (buttons.HasFlag(XInputButtons.DPadDown) && Keyboard.FocusedElement is UIElement focusedForDown)
+            focusedForDown.MoveFocus(new TraversalRequest(FocusNavigationDirection.Down));
         if (buttons.HasFlag(XInputButtons.A) && Keyboard.FocusedElement is Button { IsEnabled: true } focusedButton)
             focusedButton.Command?.Execute(focusedButton.CommandParameter);
     }
