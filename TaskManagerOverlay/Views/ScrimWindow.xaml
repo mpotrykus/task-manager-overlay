@@ -1,0 +1,18 @@
+<Window x:Class="TaskManagerOverlay.Views.ScrimWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Task Manager Overlay Scrim"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        Visibility="Visible">
+    <!-- Fullscreen semi-transparent backdrop that dims everything behind the separate overlay
+         panel window and catches clicks anywhere on screen to close the overlay. Since the panel
+         now lives in its own top-level window, this rectangle can simply cover the whole screen -
+         there's no need to cut a hole out for the panel, it just renders on top natively. -->
+    <Rectangle Fill="#44000000" MouseLeftButtonDown="OnMouseLeftButtonDown"/>
+</Window>

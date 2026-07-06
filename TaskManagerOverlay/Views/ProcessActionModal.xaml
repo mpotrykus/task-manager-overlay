@@ -1,0 +1,104 @@
+<UserControl x:Class="TaskManagerOverlay.Views.ProcessActionModal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:TaskManagerOverlay.Views">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Themes/OverlayStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <!-- Per-process action modal: stats for the selected process plus Suspend/Kill/Cancel.
+         Its own dark backdrop sits above the main panel; clicking directly on the backdrop
+         (not the modal card) cancels, mirroring the outer scrim's click-off-to-close behavior. -->
+    <Grid Background="#B3000000" Visibility="{Binding IsActionModalOpen, Converter={StaticResource BoolToVis}}"
+          MouseLeftButtonDown="OnScrimMouseLeftButtonDown"
+          IsVisibleChanged="OnVisibleChanged">
+        <Border Width="480" Background="{StaticResource PanelBackgroundBrush}" CornerRadius="16" Padding="28"
+                BorderBrush="#33FFFFFF" BorderThickness="1" Effect="{StaticResource PanelShadow}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                KeyboardNavigation.DirectionalNavigation="Cycle">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,22">
+                    <Border Width="36" Height="36" CornerRadius="9" Background="#20FFFFFF" VerticalAlignment="Center">
+                        <Image Source="{Binding ActionModalRow.Icon}" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" Margin="14,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding ActionModalRow.ProcessName}" Foreground="White" FontSize="17" FontWeight="Bold"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="220"/>
+                            <TextBlock Text="{Binding ActionModalRow.Pid, StringFormat=PID {0}}" Foreground="#777777" FontSize="11"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <Border Background="#1F4E8CFF" CornerRadius="8" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ActionModalRow.ImpactScore, StringFormat=Impact {0:0.0}%}"
+                                           Foreground="{StaticResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ActionModalRow.ExecutablePath}" Foreground="#777777" FontSize="10"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="380" Margin="0,2,0,0"
+                                   ToolTip="{Binding ActionModalRow.ExecutablePath}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Grid Margin="0,24,0,48">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <views:StatCard Grid.Column="0" Margin="0,0,8,0"
+                                     CardPadding="14,12" ValueFontSize="16" ChartHeight="24"
+                                     Label="CPU"
+                                     ValueText="{Binding ActionModalRow.CpuPercent, StringFormat={}{0:0.0}%}"
+                                     ValueBrush="{Binding ActionModalRow.CpuPercent, Converter={StaticResource HeatBrush}}"
+                                     StrokeBrush="{Binding ActionModalRow.CpuPercent, Converter={StaticResource HeatBrush}}"
+                                     FillBrush="{Binding ActionModalRow.CpuPercent, Converter={StaticResource HeatBrush}, ConverterParameter=Fill}"
+                                     HistoryPoints="{Binding SelectedProcessCpuHistoryPoints}"
+                                     HistoryFillPoints="{Binding SelectedProcessCpuHistoryFillPoints}"/>
+                    <views:StatCard Grid.Column="1" Margin="8,0,8,0"
+                                     CardPadding="14,12" ValueFontSize="16" ChartHeight="24"
+                                     Label="RAM"
+                                     ValueText="{Binding ActionModalRow.RamMb, StringFormat={}{0:0} MB}"
+                                     ValueBrush="#CFCFCF"
+                                     StrokeBrush="{StaticResource AccentBrush}"
+                                     FillBrush="#224E8CFF"
+                                     HistoryPoints="{Binding SelectedProcessRamHistoryPoints}"
+                                     HistoryFillPoints="{Binding SelectedProcessRamHistoryFillPoints}"/>
+                    <views:StatCard Grid.Column="2" Margin="8,0,0,0"
+                                     CardPadding="14,12" ValueFontSize="16" ChartHeight="24"
+                                     Label="GPU"
+                                     ValueText="{Binding ActionModalRow.GpuPercent, Converter={StaticResource GpuPercentText}}"
+                                     ValueBrush="{Binding ActionModalRow.GpuPercent, Converter={StaticResource HeatBrush}}"
+                                     StrokeBrush="{Binding ActionModalRow.GpuPercent, Converter={StaticResource HeatBrush}}"
+                                     FillBrush="{Binding ActionModalRow.GpuPercent, Converter={StaticResource HeatBrush}, ConverterParameter=Fill}"
+                                     HistoryPoints="{Binding SelectedProcessGpuHistoryPoints}"
+                                     HistoryFillPoints="{Binding SelectedProcessGpuHistoryFillPoints}"/>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" x:Name="SuspendModalButton" Content="{Binding ActionModalRow.IsSuspended, Converter={StaticResource SuspendLabel}}"
+                            Command="{Binding ConfirmSuspendResumeCommand}"
+                            IsEnabled="{Binding ActionModalRow.IsProtected, Converter={StaticResource InverseBool}}"
+                            Style="{StaticResource ActionButtonStyle}" Background="{StaticResource AccentGradient}"
+                            Padding="0,12" Margin="0,0,8,0"/>
+                    <Button Grid.Column="1" x:Name="KillModalButton" Content="Kill"
+                            Command="{Binding ConfirmKillCommand}"
+                            IsEnabled="{Binding ActionModalRow.IsProtected, Converter={StaticResource InverseBool}}"
+                            Style="{StaticResource ActionButtonStyle}" Background="{StaticResource DangerGradient}"
+                            Padding="0,12" Margin="8,0"/>
+                    <Button Grid.Column="2" x:Name="CancelModalButton" Content="Cancel"
+                            Command="{Binding CancelActionModalCommand}"
+                            Style="{StaticResource ActionButtonStyle}" Background="#3A3A3A"
+                            Padding="0,12" Margin="8,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

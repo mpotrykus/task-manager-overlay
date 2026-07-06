@@ -1,0 +1,213 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:TaskManagerOverlay.ViewModels"
+                    xmlns:views="clr-namespace:TaskManagerOverlay.Views">
+
+    <views:BoolToVisibilityConverter x:Key="BoolToVis"/>
+    <views:InverseBooleanConverter x:Key="InverseBool"/>
+    <views:SuspendResumeLabelConverter x:Key="SuspendLabel"/>
+    <views:NullableGpuPercentConverter x:Key="GpuPercentText"/>
+    <views:CountToVisibilityConverter x:Key="CountToVis"/>
+    <views:PercentToHeatBrushConverter x:Key="HeatBrush"/>
+
+    <!-- Core palette: a soft indigo-blue accent against a layered charcoal surface. -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#364E8CFF"/>
+    <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#5B94FF" Offset="0"/>
+        <GradientStop Color="#7B5CFA" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DangerGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#EA5459" Offset="0"/>
+        <GradientStop Color="#C4373C" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SuccessGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#5FCF6E" Offset="0"/>
+        <GradientStop Color="#3DA34A" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="PanelBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#CC262626" Offset="0"/>
+        <GradientStop Color="#CC151515" Offset="1"/>
+    </LinearGradientBrush>
+    <DropShadowEffect x:Key="PanelShadow" Color="#000000" BlurRadius="46" ShadowDepth="0" Opacity="0.55"/>
+
+    <!-- Flat, minimal scrollbar: no arrow buttons, thin translucent track, accent thumb on hover/drag. -->
+    <Style x:Key="OverlayScrollBarThumbStyle" TargetType="Thumb">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="ThumbBorder" Background="#40FFFFFF" CornerRadius="4" Margin="2,0" SnapsToDevicePixels="True"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="#70FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{StaticResource AccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="OverlayScrollBarPageButtonStyle" TargetType="RepeatButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Rectangle Fill="Transparent"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ScrollBar">
+        <Setter Property="Width" Value="12"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageUpCommand" Style="{StaticResource OverlayScrollBarPageButtonStyle}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageDownCommand" Style="{StaticResource OverlayScrollBarPageButtonStyle}"/>
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource OverlayScrollBarThumbStyle}"/>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ProcessRowContainerStyle" TargetType="ListBoxItem">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Margin" Value="0,5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="AccentBar" Grid.Column="0" Background="{StaticResource AccentBrush}"
+                                CornerRadius="2" Margin="0,5" Opacity="0"/>
+                        <Border x:Name="RowBorder" Grid.Column="1" Background="#08FFFFFF" CornerRadius="8"
+                                Padding="14,12" BorderThickness="1" BorderBrush="Transparent" Margin="6,0,0,0">
+                            <ContentPresenter/>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="RowBorder" Property="Background" Value="#12FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="RowBorder" Property="Background" Value="#123D6FE0"/>
+                            <Setter TargetName="RowBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="AccentBar" Property="Opacity" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ActionButtonStyle" TargetType="Button">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}"
+                            BorderThickness="2" BorderBrush="Transparent">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.85"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.65"/>
+                        </Trigger>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="ButtonBorder" Property="Background" Value="#3A3A3A"/>
+                            <Setter Property="Foreground" Value="#7A7A7A"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="MetricTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,0,14,0"/>
+    </Style>
+
+    <DataTemplate x:Key="ProcessRowTemplate" DataType="{x:Type vm:ProcessRowViewModel}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="34"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="90"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Width="26" Height="26" CornerRadius="6" Background="#20FFFFFF" VerticalAlignment="Center">
+                <Image Source="{Binding Icon}" Width="17" Height="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <TextBlock Grid.Column="1" Text="{Binding ProcessName}" Foreground="White" FontSize="13" VerticalAlignment="Center" Margin="14,0" TextTrimming="CharacterEllipsis"/>
+            <TextBlock Grid.Column="2" Text="{Binding CpuPercent, StringFormat={}{0:0.0}%}" Style="{StaticResource MetricTextStyle}"
+                       Foreground="{Binding CpuPercent, Converter={StaticResource HeatBrush}}"/>
+            <TextBlock Grid.Column="3" Text="{Binding RamMb, StringFormat={}{0:0} MB}" Style="{StaticResource MetricTextStyle}" Foreground="#CFCFCF"/>
+            <TextBlock Grid.Column="4" Text="{Binding GpuPercent, Converter={StaticResource GpuPercentText}}" Style="{StaticResource MetricTextStyle}"
+                       Foreground="{Binding GpuPercent, Converter={StaticResource HeatBrush}}"/>
+            <TextBlock Grid.Column="5" Text="{Binding ImpactScore, StringFormat={}{0:0.0}}" Style="{StaticResource MetricTextStyle}"
+                       Foreground="{Binding ImpactScore, Converter={StaticResource HeatBrush}}"/>
+
+            <Border Grid.Column="6" Background="#332A1F00" CornerRadius="10" Padding="7,3" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Visibility="{Binding IsProtected, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="9" Foreground="#E0A500" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="Protected" Foreground="#E0A500" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DataTemplate>
+
+    <!-- Flat, chrome-less button used for the CPU/RAM/GPU column headers so clicking one
+         sets it as the active sort - visuals come entirely from the header's own TextBlock. -->
+    <Style x:Key="SortHeaderButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <ContentPresenter HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

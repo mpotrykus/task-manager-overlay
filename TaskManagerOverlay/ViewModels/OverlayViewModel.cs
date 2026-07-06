@@ -55,6 +55,11 @@ public sealed class OverlayViewModel : ObservableObject
     private int _processCount;
     public int ProcessCount { get => _processCount; set => SetProperty(ref _processCount, value); }
 
+    private bool _isLoading = true;
+    /// <summary>True until the first snapshot arrives from ProcessMonitorService, so the process
+    /// list can show a loading indicator instead of a brief empty state on startup.</summary>
+    public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
+
     // Rolling trend history behind the overall-stats sparklines. Fixed 0-100 domain (all three
     // are percentages), so the tiles share one intuitive scale without needing a drawn axis.
     private const int SparklineHistoryLength = 30;
@@ -425,6 +430,8 @@ public sealed class OverlayViewModel : ObservableObject
     /// </summary>
     public void ApplySnapshot(IReadOnlyList<ProcessSample> samples, SystemStatsSample stats)
     {
+        IsLoading = false;
+
         CpuPercent = stats.CpuPercent;
         RamUsedPercent = stats.TotalRamMb > 0 ? stats.UsedRamMb / stats.TotalRamMb * 100.0 : 0;
         RamSummaryText = $"{stats.UsedRamMb / 1024.0:0.0} / {stats.TotalRamMb / 1024.0:0.0} GB";

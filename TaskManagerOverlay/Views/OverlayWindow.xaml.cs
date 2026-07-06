@@ -10,6 +10,10 @@ namespace TaskManagerOverlay.Views;
 
 public partial class OverlayWindow : Window
 {
+    // The fullscreen dimming backdrop and click-off-to-close catcher live in their own window so
+    // this one can be sized and positioned to fit just the panel - see ScrimWindow.
+    private readonly ScrimWindow _scrim = new();
+
     public OverlayViewModel ViewModel { get; }
 
     public OverlayWindow(OverlayViewModel viewModel)
@@ -19,6 +23,15 @@ public partial class OverlayWindow : Window
         DataContext = viewModel;
         PreviewKeyDown += OnPreviewKeyDown;
         SourceInitialized += OnSourceInitialized;
+        Closed += OnClosed;
+        _scrim.ScrimClicked += (_, _) => Close();
+    }
+
+    /// <summary>Closing the panel should always take the scrim down with it, whether the panel
+    /// closed itself (Escape) or was closed in response to the scrim being clicked.</summary>
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        _scrim.Close();
     }
 
     /// <summary>Enables native Acrylic blur-behind once the HWND exists (SetWindowCompositionAttribute
@@ -42,11 +55,17 @@ public partial class OverlayWindow : Window
     }
 
     /// <summary>Opens the action modal for whatever row was double-clicked - ignores double-clicks
-    /// that land on empty space below the last row rather than on an actual process row.</summary>
+    /// that land on empty space below the last row rather than on an actual process row. Reads the
+    /// row straight off the clicked ListBoxItem's DataContext rather than trusting SelectedRow, since
+    /// the active and suspended lists share that property and a double-click on one can otherwise pick
+    /// up a stale selection from the other.</summary>
     private void OnProcessRowDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (e.OriginalSource is not DependencyObject source || FindAncestor<ListBoxItem>(source) is null)
+        if (e.OriginalSource is not DependencyObject source || FindAncestor<ListBoxItem>(source) is not { } item)
             return;
+
+        if (item.DataContext is ProcessRowViewModel row)
+            ViewModel.SelectedRow = row;
 
         if (ViewModel.OpenActionModalCommand.CanExecute(null))
             ViewModel.OpenActionModalCommand.Execute(null);
@@ -72,25 +91,6 @@ public partial class OverlayWindow : Window
         return null;
     }
 
-    /// <summary>Clicking directly on the action modal's own backdrop (not the modal card) cancels it,
-    /// mirroring the outer scrim's click-off-to-close behavior - see OnScrimMouseLeftButtonDown.</summary>
-    private void OnActionModalScrimMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.OriginalSource == sender)
-        {
-            ViewModel.CancelActionModalCommand.Execute(null);
-            e.Handled = true;
-        }
-    }
-
-    /// <summary>Moves keyboard focus to the Cancel button whenever the action modal opens, so it's
-    /// the safe default selection for both keyboard (Enter) and gamepad (A) confirmation.</summary>
-    private void OnActionModalVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-    {
-        if ((bool)e.NewValue)
-            Dispatcher.BeginInvoke(() => CancelModalButton.Focus());
-    }
-
     /// <summary>Moves keyboard focus into the search box and selects any existing text, so typing immediately replaces the filter.</summary>
     public void FocusSearchBox()
     {
@@ -99,27 +99,45 @@ public partial class OverlayWindow : Window
         SearchBox.SelectAll();
     }
 
-    private void OnScrimMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void ClearSearchButton_Click(object sender, RoutedEventArgs e)
     {
-        // Only close when the click landed directly on the scrim itself, not on the panel or
-        // any of its descendants (which would bubble the event up to this same handler).
-        if (e.OriginalSource == sender)
-            Close();
+        SearchBox.Clear();
+        FocusSearchBox();
     }
 
-    private void SizeToPrimaryScreen()
+    private void SizeAndCenterOnPrimaryScreen()
     {
-        // The window now covers the whole primary screen so the scrim can darken everything
-        // behind the panel and catch clicks outside it; the panel itself stays centered via layout.
-        Left = 0;
-        Top = 0;
-        Width = SystemParameters.PrimaryScreenWidth;
-        Height = SystemParameters.PrimaryScreenHeight;
+        double screenWidth = SystemParameters.PrimaryScreenWidth;
+        double screenHeight = SystemParameters.PrimaryScreenHeight;
+
+        // The panel scales uniformly with the screen size but never exceeds 80% of the screen's
+        // width or height, whichever limit the panel's fixed 1020x810 aspect ratio hits first.
+        const double panelAspect = 1020.0 / 810.0;
+        double width = screenWidth * 0.8;
+        double height = width / panelAspect;
+        if (height > screenHeight * 0.8)
+        {
+            height = screenHeight * 0.8;
+            width = height * panelAspect;
+        }
+
+        Width = width;
+        Height = height;
+        Left = (screenWidth - width) / 2;
+        Top = (screenHeight - height) / 2;
     }
 
     public void ShowOverlay()
     {
-        SizeToPrimaryScreen();
+        _scrim.SizeToPrimaryScreen();
+        _scrim.Show();
+
+        // Owning the panel to the scrim (rather than just relying on show/activate order) makes
+        // Windows enforce that the panel always stays above the scrim in the Z order, regardless
+        // of any timing quirks from the Acrylic blur composition call in OnSourceInitialized.
+        Owner = _scrim;
+
+        SizeAndCenterOnPrimaryScreen();
         Show();
         Activate();
         Focus();
