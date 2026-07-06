@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Point = System.Windows.Point;
 using TaskManagerOverlay.Models;
 using TaskManagerOverlay.Services;
@@ -59,6 +60,12 @@ public sealed class OverlayViewModel : ObservableObject
     /// <summary>True until the first snapshot arrives from ProcessMonitorService, so the process
     /// list can show a loading indicator instead of a brief empty state on startup.</summary>
     public bool IsLoading { get => _isLoading; private set => SetProperty(ref _isLoading, value); }
+
+    private bool _isSorting;
+    /// <summary>True while a sort-mode change is being applied. Re-sorting/re-selecting hundreds of rows
+    /// runs synchronously on the UI thread and can take a noticeable moment, so this flag lets the UI
+    /// show a spinner instead of appearing to hang.</summary>
+    public bool IsSorting { get => _isSorting; private set => SetProperty(ref _isSorting, value); }
 
     // Rolling trend history behind the overall-stats sparklines. Fixed 0-100 domain (all three
     // are percentages), so the tiles share one intuitive scale without needing a drawn axis.
@@ -386,11 +393,22 @@ public sealed class OverlayViewModel : ObservableObject
     }
 
     /// <summary>Switches the active list's sort mode directly (e.g. from clicking a column header), jumping selection back to the new top row.</summary>
-    public void SetSortMode(ProcessSortMode mode)
+    public async void SetSortMode(ProcessSortMode mode)
     {
+        if (IsSorting)
+            return;
+
         SortMode = mode;
+        IsSorting = true;
+
+        // Give WPF a chance to actually paint the spinner before the synchronous re-sort below
+        // blocks the UI thread - without this yield, IsSorting would flip true and false again
+        // before a single frame renders.
+        await Dispatcher.Yield(DispatcherPriority.Background);
+
         ApplySortMode();
         SelectedRow = GetCombinedOrder().FirstOrDefault();
+        IsSorting = false;
     }
 
     private void ApplySortMode()
@@ -421,6 +439,13 @@ public sealed class OverlayViewModel : ObservableObject
         int currentIndex = SelectedRow is null ? -1 : ordered.IndexOf(SelectedRow);
         int newIndex = Math.Clamp(currentIndex < 0 ? 0 : currentIndex + delta, 0, ordered.Count - 1);
         SelectedRow = ordered[newIndex];
+    }
+
+    /// <summary>Moves the selection to the first or last item within the combined active+suspended order. Must be called on the UI thread.</summary>
+    public void MoveSelectionToEdge(bool toStart)
+    {
+        var ordered = GetCombinedOrder();
+        SelectedRow = toStart ? ordered.FirstOrDefault() : ordered.LastOrDefault();
     }
 
     /// <summary>

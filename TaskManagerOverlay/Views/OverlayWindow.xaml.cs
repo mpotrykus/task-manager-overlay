@@ -51,6 +51,47 @@ public partial class OverlayWindow : Window
             else
                 Close();
             e.Handled = true;
+            return;
+        }
+
+        if (ViewModel.IsActionModalOpen)
+        {
+            // Mirrors the gamepad's D-pad left/right behavior while the action modal is open:
+            // move focus between the modal's buttons instead of touching the process selection.
+            if (e.Key == Key.Left && Keyboard.FocusedElement is UIElement focusedForLeft)
+            {
+                focusedForLeft.MoveFocus(new TraversalRequest(FocusNavigationDirection.Left));
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Right && Keyboard.FocusedElement is UIElement focusedForRight)
+            {
+                focusedForRight.MoveFocus(new TraversalRequest(FocusNavigationDirection.Right));
+                e.Handled = true;
+            }
+            return;
+        }
+
+        if (e.Key == Key.Up)
+        {
+            ViewModel.MoveSelection(-1);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Down)
+        {
+            ViewModel.MoveSelection(1);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Left && !ReferenceEquals(Keyboard.FocusedElement, SearchBox))
+        {
+            // Left/Right jump to the top/bottom of the list, same as the gamepad D-pad - but only
+            // when the search box isn't focused, so typing a filter still moves the text caret.
+            ViewModel.MoveSelectionToEdge(toStart: true);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Right && !ReferenceEquals(Keyboard.FocusedElement, SearchBox))
+        {
+            ViewModel.MoveSelectionToEdge(toStart: false);
+            e.Handled = true;
         }
     }
 

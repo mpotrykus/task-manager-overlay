@@ -9,7 +9,8 @@ using TaskManagerOverlay.Views;
 namespace TaskManagerOverlay.Services;
 
 /// <summary>
-/// Routes gamepad input to the overlay window while it has focus: D-pad/stick navigation, A (open
+/// Routes gamepad input to the overlay window while it has focus: D-pad up/down (or stick) moves
+/// the selection by one row, D-pad left/right jumps to the top/bottom of the list, A (open
 /// the action modal for the selected process), B (Close), Y (focus search box), and LB/RB (cycle
 /// sort mode). While the action modal is open, input is redirected instead: D-pad left/right moves
 /// focus between the modal's buttons, A activates whichever button currently has focus (Cancel by
@@ -55,6 +56,10 @@ public sealed class GamepadNavigationCoordinator
             _window.ViewModel.MoveSelection(-1);
         if (buttons.HasFlag(XInputButtons.DPadDown))
             _window.ViewModel.MoveSelection(1);
+        if (buttons.HasFlag(XInputButtons.DPadLeft))
+            _window.ViewModel.MoveSelectionToEdge(toStart: true);
+        if (buttons.HasFlag(XInputButtons.DPadRight))
+            _window.ViewModel.MoveSelectionToEdge(toStart: false);
         if (buttons.HasFlag(XInputButtons.A) && _window.ViewModel.OpenActionModalCommand.CanExecute(null))
             _window.ViewModel.OpenActionModalCommand.Execute(null);
         if (buttons.HasFlag(XInputButtons.B))

@@ -274,6 +274,33 @@
                            Margin="0,14,0,0" HorizontalAlignment="Center"/>
             </StackPanel>
 
+            <!-- SORTING OVERLAY - shown while a sort-mode change is being applied, over the (stale) rows -->
+
+            <Border Grid.Row="3" Background="#B3141414"
+                    Visibility="{Binding IsSorting, Converter={StaticResource BoolToVis}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Ellipse Width="34" Height="34" StrokeThickness="3"
+                             Stroke="{StaticResource AccentGradient}" StrokeDashArray="2 1.4" StrokeDashCap="Round"
+                             RenderTransformOrigin="0.5,0.5">
+                        <Ellipse.RenderTransform>
+                            <RotateTransform/>
+                        </Ellipse.RenderTransform>
+                        <Ellipse.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
+                                                         From="0" To="360" Duration="0:0:0.9" RepeatBehavior="Forever"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Ellipse.Triggers>
+                    </Ellipse>
+                    <TextBlock Text="Sorting..." Foreground="#CCCCCC" FontSize="12"
+                               Margin="0,14,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
             <!-- SUSPENDED ROWS -->
             
             <Grid Grid.Row="4" Margin="0,24,0,0"
