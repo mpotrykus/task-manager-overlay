@@ -44,6 +44,23 @@ internal static class CompositionInterop
     [DllImport("user32.dll")]
     private static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
 
+    private enum DwmWindowAttribute
+    {
+        WindowCornerPreference = 33,
+        BorderColor = 34,
+    }
+
+    private enum DwmWindowCornerPreference
+    {
+        Round = 2,
+    }
+
+    // Sentinel COLORREF value documented for DWMWA_BORDER_COLOR meaning "no border".
+    private const int DwmwaColorNone = unchecked((int)0xFFFFFFFE);
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, DwmWindowAttribute attribute, ref int value, int size);
+
     /// <summary>
     /// Turns on Acrylic blur-behind for the given window. The tint blends into the blur itself -
     /// wherever the WPF content above it is transparent, the desktop shows through blurred and
@@ -76,6 +93,38 @@ internal static class CompositionInterop
         finally
         {
             Marshal.FreeHGlobal(accentPtr);
+        }
+    }
+
+    /// <summary>
+    /// Tells DWM to round the window's actual composition surface. SetWindowCompositionAttribute's
+    /// blur paints the whole rectangular HWND, not just the pixels inside our WPF Border's rounded
+    /// clip - a GDI SetWindowRgn has no effect here because this is a per-pixel-alpha layered window
+    /// (region clipping is ignored for those). Rounding DWM's own composition surface is the only
+    /// thing that also clips the blur, so it doesn't poke out past the rounded Border. Also turns
+    /// off DWM's default accent border, since our own Border already draws one. Windows 10 and
+    /// older simply fail these calls (unsupported attribute) and keep the square corner as before.
+    /// </summary>
+    public static void EnableRoundedCorners(IntPtr hwnd)
+    {
+        try
+        {
+            var preference = (int)DwmWindowCornerPreference.Round;
+            DwmSetWindowAttribute(hwnd, DwmWindowAttribute.WindowCornerPreference, ref preference, sizeof(int));
+        }
+        catch
+        {
+            // Best-effort visual flourish only; never let this break window creation.
+        }
+
+        try
+        {
+            var noBorder = DwmwaColorNone;
+            DwmSetWindowAttribute(hwnd, DwmWindowAttribute.BorderColor, ref noBorder, sizeof(int));
+        }
+        catch
+        {
+            // Best-effort visual flourish only; never let this break window creation.
         }
     }
 }

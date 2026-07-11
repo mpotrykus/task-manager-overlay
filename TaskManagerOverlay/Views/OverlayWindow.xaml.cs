@@ -40,6 +40,7 @@ public partial class OverlayWindow : Window
     {
         var hwnd = new WindowInteropHelper(this).Handle;
         CompositionInterop.EnableAcrylicBlur(hwnd, r: 0x15, g: 0x15, b: 0x15, alpha: 0x60);
+        CompositionInterop.EnableRoundedCorners(hwnd);
     }
 
     private void OnPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

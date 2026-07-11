@@ -25,10 +25,15 @@
          content (see SizeAndCenterOnPrimaryScreen), not the whole screen. The fullscreen dimming
          backdrop and click-off-to-close catcher live in the separate ScrimWindow underneath it. -->
     <Grid>
+        <!-- CornerRadius here is fixed (kept out of the Viewbox below) so it matches DWM's own
+             DWMWA_WINDOW_CORNER_PREFERENCE rounding (CompositionInterop.EnableRoundedCorners) - a
+             radius scaled along with the panel content would drift away from DWM's fixed physical
+             radius as the window resizes across monitors, producing mismatched corners. -->
+        <Border BorderBrush="#55FFFFFF" BorderThickness="0" CornerRadius="8"
+        Background="#66000000"
+        Effect="{StaticResource PanelShadow}">
         <Viewbox x:Name="PanelViewbox" Stretch="Uniform">
-            <Border Width="1020" Height="810" BorderBrush="#55FFFFFF" BorderThickness="0" CornerRadius="16" Padding="36,48"
-            Background="#66000000"
-            Effect="{StaticResource PanelShadow}">
+            <Border Width="1020" Height="810" Padding="36,48">
 
                 <Grid>
                     <Grid.RowDefinitions>
@@ -356,6 +361,7 @@
                 </Grid>
             </Border>
         </Viewbox>
+        </Border>
 
         <views:ProcessActionModal x:Name="ActionModal"/>
     </Grid>
